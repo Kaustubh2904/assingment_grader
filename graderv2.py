@@ -73,7 +73,7 @@ def evaluate_responses(df, questions_data):
         
         # Evaluate each question based on the questions data
         for question in questions_data:
-            q_id = question['id']
+            q_id = question.get('column_id', question['id'])  # Use column_id if available, fallback to id
             q_type = question['type']
             
             # Check if this question exists in the student response
@@ -89,6 +89,7 @@ def evaluate_responses(df, questions_data):
             else:
                 # Question not found in responses, score as 0
                 student_scores[f"{q_id}_Score"] = 0
+                print(f"Warning: Column '{q_id}' not found in student responses")
         
         student_scores["Total_Score"] = total_score
         scores.append(student_scores)
@@ -128,6 +129,9 @@ def generate_visualizations(results_df):
             
             # Create a readable version of the question IDs for the plot
             score_labels = [col.replace('_Score', '') for col in score_cols]
+            
+            # Truncate long question texts for better display
+            score_labels = [label[:20] + '...' if len(label) > 20 else label for label in score_labels]
             
             sns.barplot(x=score_labels, y=avg_scores.values, palette="viridis")
             plt.title('Average Score by Question')
@@ -169,6 +173,10 @@ def setup_assessment():
         # Generate a session ID for this assessment
         assessment_id = str(uuid.uuid4())
         
+        # Use the full question text as the column ID (what will appear in Excel)
+        for question in questions_data:
+            question['column_id'] = question['text']
+        
         # Store the questions data in the session
         session['assessment_id'] = assessment_id
         session['questions_data'] = questions_data
@@ -177,11 +185,21 @@ def setup_assessment():
         total_points = sum(1 if q['type'] == 'mcq' else 10 for q in questions_data)
         session['total_points'] = total_points
         
+        # Generate a sample Excel template for the teacher
+        sample_columns = ['Student_ID'] + [q['column_id'] for q in questions_data]
+        sample_df = pd.DataFrame(columns=sample_columns)
+        sample_df.loc[0] = ['Student1'] + ['' for _ in questions_data]  # Add a sample row
+        
+        sample_file = f'assessment_template_{assessment_id}.xlsx'
+        sample_df.to_excel(sample_file, index=False)
+        session['template_file'] = sample_file
+        
         return jsonify({
             "status": "success", 
             "message": "Assessment setup successfully",
             "assessment_id": assessment_id,
-            "total_points": total_points
+            "total_points": total_points,
+            "has_template": True
         })
     except Exception as e:
         return jsonify({"status": "error", "message": str(e)})
@@ -267,17 +285,34 @@ def download_results():
     else:
         return jsonify({"status": "error", "message": "Results file not found"})
 
-@app.route('/clear_assessment')
+@app.route('/download_template')
+def download_template():
+    """Download an Excel template that matches the assessment structure"""
+    if 'template_file' in session and os.path.exists(session['template_file']):
+        return send_file(
+            session['template_file'], 
+            as_attachment=True, 
+            download_name="student_response_template.xlsx"
+        )
+    else:
+        return jsonify({"status": "error", "message": "Template file not found"})
+
+@app.route('/clear_assessment', methods=['POST'])
 def clear_assessment():
+    """Clear the current assessment data from the session"""
     # Clean up files
     if 'results_file' in session and os.path.exists(session['results_file']):
         os.remove(session['results_file'])
+        
+    if 'template_file' in session and os.path.exists(session['template_file']):
+        os.remove(session['template_file'])
     
     # Clear session data
     session.pop('assessment_id', None)
     session.pop('questions_data', None)
     session.pop('total_points', None)
     session.pop('results_file', None)
+    session.pop('template_file', None)
     
     return jsonify({"status": "success", "message": "Assessment data cleared"})
 

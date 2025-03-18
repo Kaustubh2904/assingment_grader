@@ -137,6 +137,7 @@
             position: absolute;
             top: 15px;
             right: 15px;
+            margin-left: 20px; /* Add space between trash icon and question type */
         }
         .action-btn {
             background: none;
@@ -201,6 +202,15 @@
             margin-top: 20px;
             display: flex;
             justify-content: space-between;
+        }
+        .question-type {
+            margin-right: 30px; /* Add space on the right of question type */
+        }
+        /* For small screens, ensure trash button doesn't overlap with question type */
+        @media (max-width: 576px) {
+            .question-type {
+                margin-right: 40px; /* Increase space on smaller screens */
+            }
         }
     </style>
 </head>
@@ -355,32 +365,35 @@
             // Function to add a new question
             function addQuestion(type) {
                 questionCounter++;
-                const id = type === 'mcq' ? `MCQ${questionCounter}` : `TEXT${questionCounter}`;
+                // Keep internal id with number for tracking
+                const internalId = type === 'mcq' ? `MCQ${questionCounter}` : `TEXT${questionCounter}`;
+                // But display only the type without number
+                const displayLabel = type === 'mcq' ? 'MCQ' : 'TEXT';
                 const placeholder = type === 'mcq' ? 
                     'Enter the correct option (A, B, C, D, etc.)' : 
                     'Enter the model answer text';
                 
                 const questionCard = document.createElement('div');
                 questionCard.className = 'question-card';
-                questionCard.dataset.id = id;
+                questionCard.dataset.id = internalId;
                 
                 questionCard.innerHTML = `
                     <div class="question-header">
-                        <span class="question-id">${id}</span>
+                        <span class="question-id">${displayLabel}</span>
                         <span class="question-type ${type}">${type === 'mcq' ? 'Multiple Choice' : 'Text Answer'}</span>
                     </div>
                     <div class="question-actions">
-                        <button type="button" class="action-btn delete-btn" data-id="${id}">
+                        <button type="button" class="action-btn delete-btn" data-id="${internalId}">
                             <i class="bi bi-trash"></i>
                         </button>
                     </div>
                     <div class="form-floating mb-3">
-                        <input type="text" class="form-control" id="${id}-text" placeholder="Question Text">
-                        <label for="${id}-text">Question Text</label>
+                        <input type="text" class="form-control" id="${internalId}-text" placeholder="Question Text">
+                        <label for="${internalId}-text">Question Text</label>
                     </div>
                     <div class="form-floating">
-                        <input type="text" class="form-control" id="${id}-answer" placeholder="Answer">
-                        <label for="${id}-answer">${placeholder}</label>
+                        <input type="text" class="form-control" id="${internalId}-answer" placeholder="Answer">
+                        <label for="${internalId}-answer">${placeholder}</label>
                     </div>
                 `;
                 
@@ -486,6 +499,19 @@
                         uploadInstructions.classList.remove('alert-secondary');
                         uploadInstructions.classList.add('alert-success');
                         uploadForm.style.display = 'block';
+                        
+                        // Add a download template button
+                        if (data.has_template) {
+                            const templateBtn = document.createElement('button');
+                            templateBtn.className = 'btn btn-outline-primary ms-2';
+                            templateBtn.innerHTML = '<i class="bi bi-file-excel"></i> Download Excel Template';
+                            templateBtn.addEventListener('click', function() {
+                                window.location.href = '/download_template';
+                            });
+                            
+                            // Insert button after the upload instructions
+                            uploadInstructions.parentNode.insertBefore(templateBtn, uploadInstructions.nextSibling);
+                        }
                         
                         // Scroll to upload section
                         uploadForm.scrollIntoView({ behavior: 'smooth' });
