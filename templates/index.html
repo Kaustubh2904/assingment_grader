@@ -23,7 +23,7 @@
             </div>
             <div id="resultSection" class="mt-4" style="display:none;">
                 <h4>Results</h4>
-                <pre id="resultText" class="p-3 bg-light border"></pre>
+                <div id="resultText" class="p-3 bg-light border rounded"></div>
             </div>
         </div>
     </div>
@@ -57,13 +57,46 @@
                     return;
                 }
                 
-                // Format the results nicely - only include summary (no results.slice)
-                let formattedResult = {
-                    "Summary": result.summary
-                };
+                // Format the summary results as HTML instead of JSON
+                let resultText = document.getElementById('resultText');
+                resultText.innerHTML = `
+                    <div class="row">
+                        <div class="col-md-3">
+                            <div class="card text-center mb-3">
+                                <div class="card-body">
+                                    <h5 class="card-title">${result.summary.total_students}</h5>
+                                    <p class="card-text">Total Students</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card text-center mb-3">
+                                <div class="card-body">
+                                    <h5 class="card-title">${result.summary.average_score}</h5>
+                                    <p class="card-text">Average Score</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card text-center mb-3">
+                                <div class="card-body">
+                                    <h5 class="card-title">${result.summary.highest_score}</h5>
+                                    <p class="card-text">Highest Score</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card text-center mb-3">
+                                <div class="card-body">
+                                    <h5 class="card-title">${result.summary.passing_rate}%</h5>
+                                    <p class="card-text">Passing Rate</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
                 
-                // Show results
-                document.getElementById('resultText').innerText = JSON.stringify(formattedResult, null, 2);
+                // Show the results section
                 document.getElementById('resultSection').style.display = 'block';
                 
                 // Add visualizations if they exist

@@ -9,6 +9,31 @@ import seaborn as sns
 import io
 import base64
 import uuid
+import atexit
+import tempfile
+import glob
+
+# Create a dedicated temp directory for your application
+TEMP_DIR = os.path.join(tempfile.gettempdir(), 'auto_grader_temp')
+os.makedirs(TEMP_DIR, exist_ok=True)
+
+# Function to clean up all temporary files on application exit
+def cleanup_temp_files():
+    """Remove all temporary files created by the application"""
+    try:
+        # Delete all temporary files
+        for file_pattern in ['assessment_template_*.xlsx', 'temp_responses_*.xlsx', 'results_*.csv']:
+            for file_path in glob.glob(os.path.join(TEMP_DIR, file_pattern)):
+                try:
+                    os.remove(file_path)
+                    print(f"Cleaned up: {file_path}")
+                except:
+                    pass
+    except Exception as e:
+        print(f"Error during cleanup: {e}")
+
+# Register the cleanup function to run when the application exits
+atexit.register(cleanup_temp_files)
 
 # Initialize Flask app
 app = Flask(__name__)
@@ -190,7 +215,8 @@ def setup_assessment():
         sample_df = pd.DataFrame(columns=sample_columns)
         sample_df.loc[0] = ['Student1'] + ['' for _ in questions_data]  # Add a sample row
         
-        sample_file = f'assessment_template_{assessment_id}.xlsx'
+        # Save to the temp directory
+        sample_file = os.path.join(TEMP_DIR, f'assessment_template_{assessment_id}.xlsx')
         sample_df.to_excel(sample_file, index=False)
         session['template_file'] = sample_file
         
@@ -221,8 +247,8 @@ def upload_responses():
         return jsonify({"status": "error", "message": "No selected file"})
     
     if file and file.filename.endswith(('.xlsx', '.xls')):
-        # Save the file temporarily
-        temp_path = f'temp_responses_{session["assessment_id"]}.xlsx'
+        # Save the file to the temp directory
+        temp_path = os.path.join(TEMP_DIR, f'temp_responses_{session["assessment_id"]}.xlsx')
         file.save(temp_path)
         
         # Process the file
@@ -259,7 +285,7 @@ def upload_responses():
             visualizations = generate_visualizations(results_df)
             
             # Save the results to a temporary CSV file
-            results_file = f'results_{session["assessment_id"]}.csv'
+            results_file = os.path.join(TEMP_DIR, f'results_{session["assessment_id"]}.csv')
             results_df.to_csv(results_file, index=False)
             session['results_file'] = results_file
             
