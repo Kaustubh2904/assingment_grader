@@ -2,7 +2,7 @@
 
 A modern web application for creating assessments, evaluating student responses, and generating personalized feedback with powerful analytics.
 
-![Advanced Assignment Grader](https://img.shields.io/badge/Version-1.0-blue.svg) ![License](https://img.shields.io/badge/License-MIT-green.svg) ![Python](https://img.shields.io/badge/Python-3.8+-orange.svg) ![Flask](https://img.shields.io/badge/Flask-2.0+-purple.svg)
+![Advanced Assignment Grader](https://img.shields.io/badge/Version-1.0-blue.svg) ![Python](https://img.shields.io/badge/Python-3.8+-orange.svg) ![Flask](https://img.shields.io/badge/Flask-2.0+-purple.svg)
 
 ## Table of Contents
 
@@ -19,7 +19,7 @@ A modern web application for creating assessments, evaluating student responses,
 - [Demo](#demo)
 - [Contributing](#contributing)
 - [Future Enhancements](#future-enhancements)
-- [License](#license)
+
 
 ## Overview
 
@@ -183,10 +183,8 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 - Spaced repetition recommendations based on student performance
 - Collaborative assessment creation
 
-## License
 
-This project is licensed under the MIT License - see the LICENSE file for details.
 
 ---
 
-Developed with ❤️ for educators by [Your Name]
+Developed with ❤️ for educators
